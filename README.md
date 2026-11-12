@@ -30,7 +30,7 @@ Sensitive capture remains visible and permission-based. Android system consent d
 
 ## Security rules tests
 
-The GitHub Actions workflow starts the Firestore Emulator and runs `tests/firestore.rules.test.js`. These tests cover linked Parent session creation, Child approval/denial, session ending, and participant-only ICE candidate writes for screen, live-audio, and live-camera signalling. They validate Firestore authorization rules; they do not test media transport or prove that live mirroring works. Android CI compilation is also required after the WebRTC changes.
+The GitHub Actions workflow starts the Firestore Emulator and runs `tests/firestore.rules.test.js`. These tests cover 50-minute pairing-code expiry and one-time Child consumption, linked Parent session creation, Child approval/denial, session ending, and participant-only ICE candidate writes for screen, live-audio, and live-camera signalling. They validate Firestore authorization rules; they do not test media transport or prove that live mirroring works. Android CI compilation is also required after the WebRTC changes.
 
 ## Firebase setup
 
