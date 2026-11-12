@@ -16,7 +16,7 @@ FamilyGuard contains two Android apps: **FamilyGuard Parent** and **FamilyGuard 
 
 ## Not implemented / important limitations
 
-- **Real-time screen mirroring is not implemented.**
+- **Real-time screen mirroring is not implemented.** Firestore now has a consent-gated session/SDP/ICE signalling rules foundation, but Parent/Child WebRTC peer connections, capture service, viewer UI, and TURN configuration are not implemented. This rules change alone does not transmit screen content.
 - **Live remote microphone streaming is not implemented.** Audio is a Child-started recording, not a live microphone feed.
 - Remote camera activation is not implemented; camera sharing is Child-initiated.
 - FCM background notifications do not work until Cloud Functions are deployed and tested.
