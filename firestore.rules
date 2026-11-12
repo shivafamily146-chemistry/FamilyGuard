@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+ match /databases/{database}/documents {
+  function signedIn(){return request.auth != null;}
+  match /pairCodes/{code}{
+   allow create: if signedIn() && request.resource.data.parentUid == request.auth.uid;
+   allow get: if signedIn(); allow list: if false;
+   allow update: if signedIn() && ((resource.data.parentUid == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['consumedBy'])) || (resource.data.consumedBy == '' && request.resource.data.consumedBy == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['consumedBy'])));
+   allow delete: if signedIn() && resource.data.parentUid == request.auth.uid;
+  }
+  match /familyLinks/{childUid}{
+   allow create: if signedIn() && childUid == request.auth.uid && request.resource.data.childUid == request.auth.uid
+    && exists(/databases/$(database)/documents/pairCodes/$(request.resource.data.pairCode))
+    && get(/databases/$(database)/documents/pairCodes/$(request.resource.data.pairCode)).data.parentUid == request.resource.data.parentUid
+    && get(/databases/$(database)/documents/pairCodes/$(request.resource.data.pairCode)).data.consumedBy == request.auth.uid;
+   allow read: if signedIn() && (resource.data.childUid == request.auth.uid || resource.data.parentUid == request.auth.uid);
+   allow update,delete: if false;
+  }
+  match /approvalRequests/{id}{
+   allow create: if signedIn() && request.resource.data.childUid == request.auth.uid && request.resource.data.status == 'pending'
+    && exists(/databases/$(database)/documents/familyLinks/$(request.auth.uid))
+    && get(/databases/$(database)/documents/familyLinks/$(request.auth.uid)).data.parentUid == request.resource.data.parentUid;
+   allow read: if signedIn() && (resource.data.childUid == request.auth.uid || resource.data.parentUid == request.auth.uid);
+   allow update: if signedIn() && resource.data.parentUid == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','resolvedAt']) && request.resource.data.status in ['approved','denied'];
+   allow delete: if false;
+  }
+ }
+}
