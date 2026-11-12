@@ -23,6 +23,13 @@ jobs:
         run: |
           yes | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --licenses || true
           ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+      - name: Validate Firebase Cloud Functions
+        run: |
+          npm install --prefix functions
+          node --check functions/index.js
       - name: Build Parent and Child APKs
         run: gradle --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
