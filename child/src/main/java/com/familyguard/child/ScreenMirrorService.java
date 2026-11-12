@@ -45,8 +45,13 @@ public class ScreenMirrorService extends Service {
             ? new Notification.Builder(this, CHANNEL) : new Notification.Builder(this);
         nb.setSmallIcon(android.R.drawable.ic_menu_view)
           .setContentTitle("FamilyGuard screen sharing")
-          .setContentText("Your screen is being shared with the paired Parent. Tap Stop to end.")
+          .setContentText("Your screen is shared. Tap to open Child app and stop sharing.")
           .setOngoing(true);
+        Intent openApp = new Intent(this, MainActivity.class);
+        openApp.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        int pendingFlags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= 23) pendingFlags |= PendingIntent.FLAG_IMMUTABLE;
+        nb.setContentIntent(PendingIntent.getActivity(this, 4108, openApp, pendingFlags));
         if (Build.VERSION.SDK_INT >= 29)
             startForeground(4108, nb.build(), android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION);
         else startForeground(4108, nb.build());
