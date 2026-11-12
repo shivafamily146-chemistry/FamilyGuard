@@ -43,7 +43,7 @@ public class LiveCameraService extends Service {
     public void onIceCandidate(IceCandidate c){if(approved)writeCandidate(c);else localPending.add(c);} public void onIceCandidatesRemoved(IceCandidate[] c){}
     public void onAddStream(MediaStream s){} public void onRemoveStream(MediaStream s){} public void onDataChannel(DataChannel c){} public void onRenegotiationNeeded(){} public void onAddTrack(RtpReceiver r,MediaStream[] s){} public void onTrack(RtpTransceiver t){}
    });
-   Camera2Enumerator enumerator=new Camera2Enumerator(this);String camera=null;for(String name:enumerator.getDeviceNames())if(enumerator.isFrontFacing(name)){camera=name;break;}if(camera==null)for(String name:enumerator.getDeviceNames())if(enumerator.isBackFacing(name)){camera=name;break;}if(camera==null)throw new IllegalStateException("No available camera");
+   CameraEnumerator enumerator=Camera2Enumerator.isSupported(this)?new Camera2Enumerator(this):new Camera1Enumerator(true);String camera=null;for(String name:enumerator.getDeviceNames())if(enumerator.isFrontFacing(name)){camera=name;break;}if(camera==null)for(String name:enumerator.getDeviceNames())if(enumerator.isBackFacing(name)){camera=name;break;}if(camera==null)throw new IllegalStateException("No available camera");
    capturer=enumerator.createCapturer(camera,new CameraVideoCapturer.CameraEventsHandler(){
     public void onCameraError(String e){android.util.Log.e("FamilyGuardCamera",e);cleanup();}public void onCameraDisconnected(){cleanup();}public void onCameraFreezed(String e){android.util.Log.e("FamilyGuardCamera",e);}public void onCameraOpening(String n){}public void onFirstFrameAvailable(){}public void onCameraClosed(){}
    });
