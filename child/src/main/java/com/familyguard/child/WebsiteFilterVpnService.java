@@ -18,6 +18,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import com.google.firebase.auth.FirebaseAuth;
@@ -33,6 +35,9 @@ public class WebsiteFilterVpnService extends VpnService {
     private ListenerRegistration rulesListener;
     private final Set<String> blockedDomains = Collections.synchronizedSet(new HashSet<>());
     private final ExecutorService dnsExecutor = Executors.newSingleThreadExecutor();
+    private final Map<String, Long> lastLogged = new HashMap<>();
+    private String childUid;
+    private String parentUid;
 
     @Override public void onCreate() {
         super.onCreate();
@@ -78,7 +83,8 @@ public class WebsiteFilterVpnService extends VpnService {
     private void listenForRules() {
         FirebaseAuth auth = FirebaseAuth.getInstance();
         if (auth.getCurrentUser() == null) return;
-        String childUid = auth.getCurrentUser().getUid();
+        childUid = auth.getCurrentUser().getUid();
+        db.collection("familyLinks").document(childUid).get().addOnSuccessListener(link -> { if (link.exists()) parentUid = link.getString("parentUid"); });
         rulesListener = db.collection("websiteBlockRules").whereEqualTo("childUid", childUid)
             .addSnapshotListener((snap, error) -> {
                 if (error != null || snap == null) return;
@@ -142,6 +148,7 @@ public class WebsiteFilterVpnService extends VpnService {
             String domain = readDomain(packet, dnsStart, dnsLength);
             if (domain == null) return;
             boolean block = isBlocked(domain);
+            logDomainVisit(domain, block);
             byte[] dnsResponse = block ? blockedResponse(packet, dnsStart, dnsLength)
                 : forwardDns(packet, ipHeader, dnsStart, dnsLength);
             if (dnsResponse == null) return;
@@ -189,6 +196,23 @@ public class WebsiteFilterVpnService extends VpnService {
             System.arraycopy(reply.getData(), 0, result, 0, result.length);
             return result;
         } catch (Exception e) { return blockedResponse(packet, start, length); }
+    }
+
+    private void logDomainVisit(String domain, boolean blocked) {
+        if (childUid == null || parentUid == null || domain == null || domain.isEmpty()) return;
+        long now = System.currentTimeMillis();
+        synchronized (lastLogged) {
+            Long previous = lastLogged.get(domain);
+            if (previous != null && now - previous < 600000L) return;
+            lastLogged.put(domain, now);
+        }
+        Map<String, Object> event = new HashMap<>();
+        event.put("childUid", childUid);
+        event.put("parentUid", parentUid);
+        event.put("domain", domain);
+        event.put("blocked", blocked);
+        event.put("queriedAt", FieldValue.serverTimestamp());
+        db.collection("browserDomainEvents").add(event);
     }
 
     private byte[] buildIpv4UdpResponse(byte[] request, int ipHeader, byte[] dns) {
