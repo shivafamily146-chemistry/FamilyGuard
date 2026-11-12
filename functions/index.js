@@ -1,6 +1,6 @@
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
 const { initializeApp } = require("firebase-admin/app");
-const { getFirestore } = require("firebase-admin/firestore");
+const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { getMessaging } = require("firebase-admin/messaging");
 
 initializeApp();
@@ -28,7 +28,7 @@ exports.notifyParentOnGeofence = onDocumentCreated("geofenceEvents/{eventId}", a
     const code = error && error.code;
     if (code === "messaging/registration-token-not-registered" ||
         code === "messaging/invalid-registration-token") {
-      await profile.ref.update({ fcmToken: "INVALID_TOKEN_REQUIRES_REFRESH" });
+      await profile.ref.update({ fcmToken: FieldValue.delete(), updatedAt: FieldValue.serverTimestamp() });
       return;
     }
     throw error;
