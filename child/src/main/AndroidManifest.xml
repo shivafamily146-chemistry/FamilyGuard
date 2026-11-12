@@ -20,6 +20,7 @@
         </service>
         <service android:name=".LocationSessionService" android:exported="false" android:foregroundServiceType="location"/>
         <service android:name=".ScreenSnapshotService" android:exported="false" android:foregroundServiceType="mediaProjection"/>
+        <service android:name=".ScreenMirrorService" android:exported="false" android:foregroundServiceType="mediaProjection"/>
         <service android:name=".WebsiteFilterVpnService" android:permission="android.permission.BIND_VPN_SERVICE" android:exported="true" android:foregroundServiceType="specialUse">
             <intent-filter><action android:name="android.net.VpnService"/></intent-filter>
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="User-enabled DNS website filtering with visible VPN consent and ongoing notification"/>
