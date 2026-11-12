@@ -24,6 +24,7 @@ public class ScreenMirrorActivity extends Activity {
     private ListenerRegistration sessionListener, candidateListener;
     private final List<IceCandidate> pendingCandidates = new ArrayList<>();
     private final Set<String> seenCandidates = new HashSet<>();
+    private final List<IceCandidate> pendingRemoteCandidates = new ArrayList<>();
     private boolean sessionCreated = false, remoteAnswerSet = false, ending = false;
 
     @Override public void onCreate(Bundle state) {
@@ -44,7 +45,7 @@ public class ScreenMirrorActivity extends Activity {
 
     private void requestSession() {
         if (peer != null) return;
-        sessionRef = null; sessionId = null; sessionCreated = false; remoteAnswerSet = false; pendingCandidates.clear(); seenCandidates.clear();
+        sessionRef = null; sessionId = null; sessionCreated = false; remoteAnswerSet = false; pendingCandidates.clear(); seenCandidates.clear(); pendingRemoteCandidates.clear();
         try {
             status.setText("Preparing secure WebRTC connection…");
             startButton.setEnabled(false); stopButton.setEnabled(true);
@@ -125,7 +126,7 @@ public class ScreenMirrorActivity extends Activity {
             if ("approved".equals(state) && answerObj instanceof Map && !remoteAnswerSet) {
                 Map<String,Object> answer = (Map<String,Object>)answerObj;
                 peer.setRemoteDescription(new SimpleSdpObserver() {
-                    @Override public void onSetSuccess() { remoteAnswerSet = true; runOnUiThread(() -> status.setText("Connected. Child-approved screen is being shared live.")); }
+                    @Override public void onSetSuccess() { remoteAnswerSet = true; for (IceCandidate candidate : new ArrayList<>(pendingRemoteCandidates)) peer.addIceCandidate(candidate); pendingRemoteCandidates.clear(); runOnUiThread(() -> status.setText("Connected. Child-approved screen is being shared live.")); }
                     @Override public void onSetFailure(String error) { fail("Could not apply Child answer: " + error); }
                 }, new SessionDescription(SessionDescription.Type.fromCanonicalForm(String.valueOf(answer.get("type"))), String.valueOf(answer.get("sdp"))));
             }
@@ -137,7 +138,8 @@ public class ScreenMirrorActivity extends Activity {
                     String encoded = d.getString("candidate");
                     if (encoded != null) try {
                         org.json.JSONObject value = new org.json.JSONObject(encoded);
-                        peer.addIceCandidate(new IceCandidate(value.optString("sdpMid"), value.optInt("sdpMLineIndex"), value.getString("sdp")));
+                        IceCandidate candidate = new IceCandidate(value.optString("sdpMid"), value.optInt("sdpMLineIndex"), value.getString("sdp"));
+                        if (remoteAnswerSet) peer.addIceCandidate(candidate); else pendingRemoteCandidates.add(candidate);
                     } catch (Exception ignored) {}
                 }
             }
