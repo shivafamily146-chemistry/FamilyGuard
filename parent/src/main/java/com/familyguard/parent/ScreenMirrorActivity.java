@@ -118,8 +118,8 @@ public class ScreenMirrorActivity extends Activity {
         sessionListener = sessionRef.addSnapshotListener((snap,error) -> {
             if (error != null || snap == null || !snap.exists()) { fail("Screen session could not be read."); return; }
             String state = snap.getString("status");
-            if ("denied".equals(state)) { runOnUiThread(() -> status.setText("Child denied screen sharing.")); return; }
-            if ("ended".equals(state) || "cancelled".equals(state)) { runOnUiThread(() -> status.setText("Screen sharing ended.")); return; }
+            if ("denied".equals(state)) { ending = true; cleanup(); runOnUiThread(() -> { status.setText("Child denied screen sharing."); startButton.setEnabled(true); stopButton.setEnabled(false); }); return; }
+            if ("ended".equals(state) || "cancelled".equals(state)) { ending = true; cleanup(); runOnUiThread(() -> { status.setText("Screen sharing ended."); startButton.setEnabled(true); stopButton.setEnabled(false); }); return; }
             Object answerObj = snap.get("answer");
             if ("approved".equals(state) && answerObj instanceof Map && !remoteAnswerSet) {
                 Map<String,Object> answer = (Map<String,Object>)answerObj;
