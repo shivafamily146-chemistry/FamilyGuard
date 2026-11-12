@@ -55,6 +55,11 @@ service cloud.firestore {
    allow read: if signedIn() && (resource.data.childUid == request.auth.uid || resource.data.parentUid == request.auth.uid);
    allow update,delete: if false;
   }
+  match /audioMessages/{messageId}{
+   allow create: if signedIn() && request.resource.data.childUid == request.auth.uid && exists(/databases/$(database)/documents/familyLinks/$(request.auth.uid)) && request.resource.data.parentUid == get(/databases/$(database)/documents/familyLinks/$(request.auth.uid)).data.parentUid && request.resource.data.captureType == 'child_initiated_audio_recording';
+   allow read: if signedIn() && (resource.data.childUid == request.auth.uid || resource.data.parentUid == request.auth.uid);
+   allow update,delete: if false;
+  }
   match /screenSnapshots/{snapshotId}{
    allow create: if signedIn() && request.resource.data.childUid == request.auth.uid && exists(/databases/$(database)/documents/familyLinks/$(request.auth.uid)) && request.resource.data.parentUid == get(/databases/$(database)/documents/familyLinks/$(request.auth.uid)).data.parentUid && request.resource.data.captureType == 'child_consented_one_time_media_projection';
    allow read: if signedIn() && (resource.data.childUid == request.auth.uid || resource.data.parentUid == request.auth.uid);
