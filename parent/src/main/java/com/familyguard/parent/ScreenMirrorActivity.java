@@ -165,7 +165,7 @@ public class ScreenMirrorActivity extends Activity {
         status.setText("Screen session stopped.");
         startButton.setEnabled(true); stopButton.setEnabled(false);
     }
-    private void fail(String message) { runOnUiThread(() -> { status.setText(message); startButton.setEnabled(true); stopButton.setEnabled(false); }); cleanup(); }
+    private void fail(String message) { runOnUiThread(() -> { status.setText(message); startButton.setEnabled(true); stopButton.setEnabled(false); cleanup(); }); }
     private void cleanup() {
         if (sessionListener != null) { sessionListener.remove(); sessionListener = null; }
         if (candidateListener != null) { candidateListener.remove(); candidateListener = null; }
