@@ -50,6 +50,11 @@ service cloud.firestore {
    allow read: if signedIn() && (resource.data.childUid == request.auth.uid || resource.data.parentUid == request.auth.uid);
    allow update,delete: if false;
   }
+  match /cameraSnapshots/{snapshotId}{
+   allow create: if signedIn() && request.resource.data.childUid == request.auth.uid && request.resource.data.parentUid == get(/databases/$(database)/documents/familyLinks/$(request.auth.uid)).data.parentUid && request.resource.data.captureType == 'child_initiated_camera_thumbnail';
+   allow read: if signedIn() && (resource.data.childUid == request.auth.uid || resource.data.parentUid == request.auth.uid);
+   allow update,delete: if false;
+  }
   match /usageReports/{childUid}{
    allow create,update: if signedIn() && request.auth.uid == childUid && request.resource.data.childUid == childUid && exists(/databases/$(database)/documents/familyLinks/$(childUid)) && get(/databases/$(database)/documents/familyLinks/$(childUid)).data.parentUid == request.resource.data.parentUid;
    allow read: if signedIn() && (request.auth.uid == childUid || (exists(/databases/$(database)/documents/familyLinks/$(childUid)) && get(/databases/$(database)/documents/familyLinks/$(childUid)).data.parentUid == request.auth.uid));
