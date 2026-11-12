@@ -143,3 +143,30 @@ test('Child must approve live audio and only session participants may signal ICE
   await assertSucceeds(setDoc(doc(child, 'audioSessions/audio1/candidates/c1'), candidateData(childUid)));
   await assertFails(setDoc(doc(stranger, 'audioSessions/audio1/candidates/x'), candidateData(strangerUid)));
 });
+
+test('only the linked Parent can create a live camera request', async () => {
+  const parent = env.authenticatedContext(parentUid).firestore();
+  const stranger = env.authenticatedContext(strangerUid).firestore();
+  await assertSucceeds(setDoc(doc(parent, 'cameraSessions/camera1'), sessionData()));
+  await assertFails(setDoc(doc(stranger, 'cameraSessions/camera2'), { ...sessionData(), parentUid: strangerUid }));
+});
+
+test('Child must approve live camera and only participants may signal ICE', async () => {
+  const parent = env.authenticatedContext(parentUid).firestore();
+  const child = env.authenticatedContext(childUid).firestore();
+  const stranger = env.authenticatedContext(strangerUid).firestore();
+  await assertSucceeds(setDoc(doc(parent, 'cameraSessions/camera1'), sessionData()));
+  await assertSucceeds(getDoc(doc(child, 'cameraSessions/camera1')));
+  await assertFails(updateDoc(doc(parent, 'cameraSessions/camera1'), {
+    status: 'approved',
+    answer: { type: 'answer', sdp: 'v=0\\r\\n' },
+    updatedAt: Timestamp.fromMillis(1700000001000)
+  }));
+  await assertSucceeds(updateDoc(doc(child, 'cameraSessions/camera1'), {
+    status: 'approved',
+    answer: { type: 'answer', sdp: 'v=0\\r\\n' },
+    updatedAt: Timestamp.fromMillis(1700000001000)
+  }));
+  await assertSucceeds(setDoc(doc(child, 'cameraSessions/camera1/candidates/c1'), candidateData(childUid)));
+  await assertFails(setDoc(doc(stranger, 'cameraSessions/camera1/candidates/x'), candidateData(strangerUid)));
+});
