@@ -16,7 +16,7 @@ FamilyGuard contains two Android apps: **FamilyGuard Parent** and **FamilyGuard 
 
 ## Not implemented / important limitations
 
-- **Real-time screen mirroring is not implemented.** Firestore now has a consent-gated session/SDP/ICE signalling rules foundation, but Parent/Child WebRTC peer connections, capture service, viewer UI, and TURN configuration are not implemented. This rules change alone does not transmit screen content.
+- **Real-time screen mirroring code is now present but not yet validated end-to-end.** Parent can create a WebRTC receive-only offer and view UI; Child receives a request, must explicitly approve it, and must also approve Android MediaProjection before the foreground service starts screen capture. SDP/ICE signalling is stored in Firestore. The current build uses a public STUN server only; there is no TURN relay configuration, so connections across restrictive NATs/mobile networks may fail. Do not treat this as production-ready until both devices are tested on separate networks.
 - **Live remote microphone streaming is not implemented.** Audio is a Child-started recording, not a live microphone feed.
 - Remote camera activation is not implemented; camera sharing is Child-initiated.
 - FCM background notifications do not work until Cloud Functions are deployed and tested.
@@ -28,7 +28,7 @@ Sensitive capture remains visible and permission-based. Android system consent d
 
 ## Security rules tests
 
-The GitHub Actions workflow starts the Firestore Emulator and runs `tests/firestore.rules.test.js`. These tests cover linked Parent session creation, Child approval/denial, session ending, and participant-only ICE candidate writes. They validate Firestore authorization rules; they do not test media transport or prove that live mirroring works.
+The GitHub Actions workflow starts the Firestore Emulator and runs `tests/firestore.rules.test.js`. These tests cover linked Parent session creation, Child approval/denial, session ending, and participant-only ICE candidate writes. They validate Firestore authorization rules; they do not test media transport or prove that live mirroring works. Android CI compilation is also required after the WebRTC changes.
 
 ## Firebase setup
 
