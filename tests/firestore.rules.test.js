@@ -52,6 +52,23 @@ after(async () => {
   if (env) await env.cleanup();
 });
 
+test('Parent can create only an unused 8-character code expiring within 50 minutes', async () => {
+  const parent = env.authenticatedContext(parentUid).firestore();
+  const now = Date.now();
+  await assertSucceeds(setDoc(doc(parent, 'pairCodes/VALID123'), {
+    parentUid, createdAt: Timestamp.fromMillis(now),
+    expiresAt: Timestamp.fromMillis(now + 49 * 60 * 1000), consumedBy: ''
+  }));
+  await assertFails(setDoc(doc(parent, 'pairCodes/LONGTIME'), {
+    parentUid, createdAt: Timestamp.fromMillis(now),
+    expiresAt: Timestamp.fromMillis(now + 51 * 60 * 1000), consumedBy: ''
+  }));
+  await assertFails(setDoc(doc(parent, 'pairCodes/USED1234'), {
+    parentUid, createdAt: Timestamp.fromMillis(now),
+    expiresAt: Timestamp.fromMillis(now + 10 * 60 * 1000), consumedBy: childUid
+  }));
+});
+
 test('valid pairing code can be consumed once by the Child', async () => {
   const now = Date.now();
   await env.withSecurityRulesDisabled(async context => {
