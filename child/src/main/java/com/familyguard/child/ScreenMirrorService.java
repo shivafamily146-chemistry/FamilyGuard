@@ -211,7 +211,7 @@ public class ScreenMirrorService extends Service {
         try { if (factory != null) { factory.dispose(); factory = null; } } catch (Exception ignored) {}
         try { if (egl != null) { egl.release(); egl = null; } } catch (Exception ignored) {}
         if (sessionId != null) FirebaseFirestore.getInstance().collection("screenSessions").document(sessionId)
-            .update("status", "ended", "updatedAt", FieldValue.serverTimestamp());
+            .update("status", approved ? "ended" : "denied", "updatedAt", FieldValue.serverTimestamp());
         if (Build.VERSION.SDK_INT >= 24) stopForeground(STOP_FOREGROUND_REMOVE); else stopForeground(true);
         stopSelf();
     }
