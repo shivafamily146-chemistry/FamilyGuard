@@ -80,6 +80,43 @@ service cloud.firestore {
    allow read: if signedIn() && (resource.data.childUid == request.auth.uid || resource.data.parentUid == request.auth.uid);
    allow update,delete: if false;
   }
+  // WebRTC session signalling foundation. No media is captured or streamed by these rules.
+  // Parent requests a session; Child must explicitly approve before any capture may begin.
+  match /screenSessions/{sessionId}{
+   allow create: if signedIn()
+     && request.resource.data.parentUid == request.auth.uid
+     && request.resource.data.childUid is string
+     && request.resource.data.status == 'requested'
+     && request.resource.data.keys().hasOnly(['parentUid','childUid','status','createdAt'])
+     && exists(/databases/$(database)/documents/familyLinks/$(request.resource.data.childUid))
+     && get(/databases/$(database)/documents/familyLinks/$(request.resource.data.childUid)).data.parentUid == request.auth.uid;
+   allow read: if signedIn()
+     && (resource.data.parentUid == request.auth.uid || resource.data.childUid == request.auth.uid);
+   allow update: if signedIn()
+     && request.resource.data.parentUid == resource.data.parentUid
+     && request.resource.data.childUid == resource.data.childUid
+     && request.resource.data.createdAt == resource.data.createdAt
+     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt'])
+     && (
+       (resource.data.parentUid == request.auth.uid && request.resource.data.status in ['ended','cancelled'])
+       || (resource.data.childUid == request.auth.uid && resource.data.status in ['approved','denied','ended'] && resource.data.status == 'requested' || resource.data.childUid == request.auth.uid && request.resource.data.status == 'ended' && resource.data.status == 'approved')
+     );
+   allow delete: if false;
+   match /candidates/{candidateId}{
+    allow create: if signedIn()
+      && request.resource.data.senderUid == request.auth.uid
+      && request.resource.data.candidate is string
+      && request.resource.data.candidate.size() <= 8192
+      && request.resource.data.keys().hasOnly(['senderUid','candidate','createdAt'])
+      && get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.status == 'approved'
+      && (get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.parentUid == request.auth.uid
+          || get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.childUid == request.auth.uid);
+    allow read: if signedIn()
+      && (get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.parentUid == request.auth.uid
+          || get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.childUid == request.auth.uid);
+    allow update,delete: if false;
+   }
+  }
   match /parentProfiles/{parentUid}{
    allow create,update: if signedIn() && request.auth.uid == parentUid
      && request.resource.data.keys().hasOnly(['fcmToken','updatedAt'])
