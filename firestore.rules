@@ -29,6 +29,11 @@ service cloud.firestore {
    allow read: if signedIn() && (resource.data.childUid == request.auth.uid || resource.data.parentUid == request.auth.uid);
    allow update,delete: if false;
   }
+  match /usageReports/{childUid}{
+   allow create,update: if signedIn() && request.auth.uid == childUid && request.resource.data.childUid == childUid && exists(/databases/$(database)/documents/familyLinks/$(childUid)) && get(/databases/$(database)/documents/familyLinks/$(childUid)).data.parentUid == request.resource.data.parentUid;
+   allow read: if signedIn() && (request.auth.uid == childUid || (exists(/databases/$(database)/documents/familyLinks/$(childUid)) && get(/databases/$(database)/documents/familyLinks/$(childUid)).data.parentUid == request.auth.uid));
+   allow delete: if false;
+  }
   match /geofences/{fenceId}{
    allow create: if signedIn() && request.resource.data.parentUid == request.auth.uid && request.resource.data.active == true && request.resource.data.latitude is number && request.resource.data.latitude >= -90 && request.resource.data.latitude <= 90 && request.resource.data.longitude is number && request.resource.data.longitude >= -180 && request.resource.data.longitude <= 180 && request.resource.data.radiusMeters is number && request.resource.data.radiusMeters >= 25 && request.resource.data.radiusMeters <= 100000 && exists(/databases/$(database)/documents/familyLinks/$(request.resource.data.childUid)) && get(/databases/$(database)/documents/familyLinks/$(request.resource.data.childUid)).data.parentUid == request.auth.uid;
    allow read: if signedIn() && (resource.data.parentUid == request.auth.uid || resource.data.childUid == request.auth.uid);
