@@ -5,8 +5,8 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: familyguard-android-v3-${{ github.ref }}
-  cancel-in-progress: true
+  group: familyguard-android-v4-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
