@@ -8,5 +8,6 @@
         </activity>
         <activity android:name=".ScreenMirrorActivity" android:exported="false"/>
         <activity android:name=".LiveAudioActivity" android:exported="false"/>
+        <activity android:name=".LiveCameraActivity" android:exported="false"/>
     </application>
 </manifest>
