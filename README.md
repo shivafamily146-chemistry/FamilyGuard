@@ -32,10 +32,10 @@ Sensitive capture remains visible and permission-based. Android system consent d
 
 The GitHub Actions workflow starts the Firestore Emulator and runs `tests/firestore.rules.test.js`. These tests cover 50-minute pairing-code expiry and one-time Child consumption, linked Parent session creation, Child approval/denial, session ending, and participant-only ICE candidate writes for screen, live-audio, and live-camera signalling. They validate Firestore authorization rules; they do not test media transport or prove that live mirroring works. Android CI compilation is also required after the WebRTC changes.
 
-## Firebase setup
+## Authentication and pairing\n\n- Both apps now require Google Sign-In and exchange the Google ID token for a Firebase credential. Anonymous authentication is not used.\n- Parent generates a cryptographically random 8-character pairing code using `SecureRandom`; the code expires after 50 minutes and is consumed once by a Child account.\n- Google Sign-In cannot complete until the Firebase Google provider, Android signing fingerprints, OAuth Web client ID, and refreshed `google-services.json` files are configured as described below.\n\n## Firebase setup
 
 1. Place the Firebase project's `google-services.json` in both Android app module directories (`parent/` and `child/`).
-2. In Firebase Authentication, enable **Anonymous** sign-in.
+2. In Firebase Authentication, enable the **Google** sign-in provider and configure its project support email. Add the SHA-1 and SHA-256 fingerprints for both Android application IDs (`com.familyguard.parent` and `com.familyguard.child`) in Firebase Project Settings.\n3. Create an OAuth 2.0 **Web application** client ID in Google Cloud Console for the same Firebase project. Put that Web client ID (ending in `.apps.googleusercontent.com`) in both `parent/src/main/res/values/google_auth.xml` and `child/src/main/res/values/google_auth.xml`, replacing `REPLACE_WITH_WEB_CLIENT_ID`. Do not use an Android OAuth client ID here. Download fresh `google-services.json` files after enabling Google sign-in and put them in both module directories; they must include the OAuth client configuration.\n4. Create/enable Cloud Firestore and Firebase Storage.
 3. Create/enable Cloud Firestore and Firebase Storage.
 4. Publish the repository rules:
    ```sh
