@@ -5,6 +5,18 @@ const { getMessaging } = require("firebase-admin/messaging");
 
 initializeApp();
 
+async function removeTokenIfStillCurrent(profileRef, sentToken) {
+  await getFirestore().runTransaction(async (transaction) => {
+    const latest = await transaction.get(profileRef);
+    if (latest.exists && latest.get("fcmToken") === sentToken) {
+      transaction.update(profileRef, {
+        fcmToken: FieldValue.delete(),
+        updatedAt: FieldValue.serverTimestamp()
+      });
+    }
+  });
+}
+
 exports.notifyParentOnGeofence = onDocumentCreated("geofenceEvents/{eventId}", async (event) => {
   const data = event.data && event.data.data();
   if (!data || !data.parentUid) return;
@@ -28,7 +40,7 @@ exports.notifyParentOnGeofence = onDocumentCreated("geofenceEvents/{eventId}", a
     const code = error && error.code;
     if (code === "messaging/registration-token-not-registered" ||
         code === "messaging/invalid-registration-token") {
-      await profile.ref.update({ fcmToken: FieldValue.delete(), updatedAt: FieldValue.serverTimestamp() });
+      await removeTokenIfStillCurrent(profile.ref, token);
       return;
     }
     throw error;
