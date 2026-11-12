@@ -108,11 +108,12 @@ service cloud.firestore {
          && !('answer' in request.resource.data))
        || (resource.data.childUid == request.auth.uid
          && resource.data.status == 'requested'
-         && request.resource.data.status in ['approved','denied']
-         && request.resource.data.answer is map
-         && request.resource.data.answer.type == 'answer'
-         && request.resource.data.answer.sdp is string
-         && request.resource.data.answer.sdp.size() <= 65536)
+         && ((request.resource.data.status == 'approved'
+              && request.resource.data.answer is map
+              && request.resource.data.answer.type == 'answer'
+              && request.resource.data.answer.sdp is string
+              && request.resource.data.answer.sdp.size() <= 65536)
+             || (request.resource.data.status == 'denied' && !('answer' in request.resource.data)))
        || (resource.data.childUid == request.auth.uid
          && resource.data.status == 'approved'
          && request.resource.data.status == 'ended'
