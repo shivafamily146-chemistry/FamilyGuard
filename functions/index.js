@@ -28,7 +28,7 @@ exports.notifyParentOnGeofence = onDocumentCreated("geofenceEvents/{eventId}", a
     const code = error && error.code;
     if (code === "messaging/registration-token-not-registered" ||
         code === "messaging/invalid-registration-token") {
-      await profile.ref.update({ fcmToken: "" });
+      await profile.ref.update({ fcmToken: "INVALID_TOKEN_REQUIRES_REFRESH" });
       return;
     }
     throw error;
