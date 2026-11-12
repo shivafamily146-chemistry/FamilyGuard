@@ -51,6 +51,40 @@ after(async () => {
   if (env) await env.cleanup();
 });
 
+test('valid pairing code can be consumed once by the Child', async () => {
+  const now = Date.now();
+  await env.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(), 'pairCodes/VALID123'), {
+      parentUid, consumedBy: '', expiresAt: Timestamp.fromMillis(now + 60000)
+    });
+  });
+  const child = env.authenticatedContext(childUid).firestore();
+  await assertSucceeds(updateDoc(doc(child, 'pairCodes/VALID123'), { consumedBy: childUid }));
+  await assertSucceeds(setDoc(doc(child, 'familyLinks/' + childUid), {
+    parentUid, childUid, pairCode: 'VALID123', childLabel: 'Test Child',
+    pairedAt: Timestamp.fromMillis(now)
+  }));
+  await assertFails(updateDoc(doc(child, 'pairCodes/VALID123'), { consumedBy: childUid }));
+});
+
+test('expired pairing code cannot be consumed or linked', async () => {
+  await env.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(), 'pairCodes/EXPIRE12'), {
+      parentUid, consumedBy: '', expiresAt: Timestamp.fromMillis(Date.now() - 60000)
+    });
+  });
+  const child = env.authenticatedContext(childUid).firestore();
+  await assertFails(updateDoc(doc(child, 'pairCodes/EXPIRE12'), { consumedBy: childUid }));
+  await env.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(), 'pairCodes/EXPIRE12'), {
+      parentUid, consumedBy: childUid, expiresAt: Timestamp.fromMillis(Date.now() - 60000)
+    });
+  });
+  await assertFails(setDoc(doc(child, 'familyLinks/' + childUid), {
+    parentUid, childUid, pairCode: 'EXPIRE12', childLabel: 'Test Child',
+    pairedAt: Timestamp.fromMillis(Date.now())
+  }));
+});
 test('only the linked Parent can create a screen session request', async () => {
   const parent = env.authenticatedContext(parentUid).firestore();
   const stranger = env.authenticatedContext(strangerUid).firestore();
