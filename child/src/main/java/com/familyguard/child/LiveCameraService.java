@@ -22,7 +22,7 @@ public class LiveCameraService extends Service {
   Notification.Builder b=Build.VERSION.SDK_INT>=26?new Notification.Builder(this,CHANNEL):new Notification.Builder(this);
   Intent open=new Intent(this,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_SINGLE_TOP);int pf=PendingIntent.FLAG_UPDATE_CURRENT;if(Build.VERSION.SDK_INT>=23)pf|=PendingIntent.FLAG_IMMUTABLE;
   b.setSmallIcon(android.R.drawable.ic_menu_camera).setContentTitle("FamilyGuard live camera").setContentText("Camera is live to your approved Parent. Tap Child app to stop.").setOngoing(true).setContentIntent(PendingIntent.getActivity(this,4111,open,pf));
-  if(Build.VERSION.SDK_INT>=29)startForeground(4111,b.build(),android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA);else startForeground(4111,b.build());
+  if(Build.VERSION.SDK_INT>=30)startForeground(4111,b.build(),android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA);else startForeground(4111,b.build());
   uid=FirebaseAuth.getInstance().getUid();if(uid==null){cleanup();return START_NOT_STICKY;}listen();return START_NOT_STICKY;
  }
  private void listen(){
