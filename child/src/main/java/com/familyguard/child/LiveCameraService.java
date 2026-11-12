@@ -12,7 +12,7 @@ import java.util.*;
 public class LiveCameraService extends Service {
  private static final String CHANNEL="familyguard_live_camera";
  private String sessionId,uid; private PeerConnectionFactory factory; private PeerConnection peer;
- private VideoSource source; private VideoTrack track; private CameraVideoCapturer capturer; private SurfaceTextureHelper texture;
+ private VideoSource source; private VideoTrack track; private CameraVideoCapturer capturer; private SurfaceTextureHelper texture; private EglBase egl;
  private ListenerRegistration sessionListener,candidateListener;
  private final List<IceCandidate> localPending=new ArrayList<>(),remotePending=new ArrayList<>();
  private final Set<String> seen=new HashSet<>(); private boolean approved=false,remoteOfferSet=false,cleaning=false;
@@ -33,7 +33,7 @@ public class LiveCameraService extends Service {
  private void startPeer(Map<String,Object> offer){
   try{
    PeerConnectionFactory.initialize(PeerConnectionFactory.InitializationOptions.builder(getApplicationContext()).createInitializationOptions());
-   EglBase egl=EglBase.create();
+   egl=EglBase.create();
    factory=PeerConnectionFactory.builder().setVideoEncoderFactory(new DefaultVideoEncoderFactory(egl.getEglBaseContext(),true,true)).setVideoDecoderFactory(new DefaultVideoDecoderFactory(egl.getEglBaseContext())).createPeerConnectionFactory();
    PeerConnection.RTCConfiguration cfg=new PeerConnection.RTCConfiguration(Collections.singletonList(PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer()));cfg.sdpSemantics=PeerConnection.SdpSemantics.UNIFIED_PLAN;
    peer=factory.createPeerConnection(cfg,new PeerConnection.Observer(){
@@ -53,7 +53,7 @@ public class LiveCameraService extends Service {
  }
  private DocumentReference ref(){return FirebaseFirestore.getInstance().collection("cameraSessions").document(sessionId);}
  private void writeCandidate(IceCandidate c){try{Map<String,Object>d=new HashMap<>();d.put("senderUid",uid);d.put("candidate",new org.json.JSONObject().put("sdpMid",c.sdpMid).put("sdpMLineIndex",c.sdpMLineIndex).put("sdp",c.sdp).toString());d.put("createdAt",FieldValue.serverTimestamp());ref().collection("candidates").add(d);}catch(Exception ignored){}}
- private void cleanup(){if(cleaning)return;cleaning=true;if(sessionListener!=null){sessionListener.remove();sessionListener=null;}if(candidateListener!=null){candidateListener.remove();candidateListener=null;}try{if(capturer!=null){capturer.stopCapture();capturer.dispose();capturer=null;}}catch(Exception ignored){}try{if(track!=null){track.dispose();track=null;}}catch(Exception ignored){}try{if(source!=null){source.dispose();source=null;}}catch(Exception ignored){}try{if(texture!=null){texture.dispose();texture=null;}}catch(Exception ignored){}try{if(peer!=null){peer.close();peer.dispose();peer=null;}}catch(Exception ignored){}try{if(factory!=null){factory.dispose();factory=null;}}catch(Exception ignored){}if(sessionId!=null)ref().update("status",approved?"ended":"denied","updatedAt",FieldValue.serverTimestamp());if(Build.VERSION.SDK_INT>=24)stopForeground(STOP_FOREGROUND_REMOVE);else stopForeground(true);stopSelf();}
+ private void cleanup(){if(cleaning)return;cleaning=true;if(sessionListener!=null){sessionListener.remove();sessionListener=null;}if(candidateListener!=null){candidateListener.remove();candidateListener=null;}try{if(capturer!=null){capturer.stopCapture();capturer.dispose();capturer=null;}}catch(Exception ignored){}try{if(track!=null){track.dispose();track=null;}}catch(Exception ignored){}try{if(source!=null){source.dispose();source=null;}}catch(Exception ignored){}try{if(texture!=null){texture.dispose();texture=null;}}catch(Exception ignored){}try{if(peer!=null){peer.close();peer.dispose();peer=null;}}catch(Exception ignored){}try{if(factory!=null){factory.dispose();factory=null;}}catch(Exception ignored){}try{if(egl!=null){egl.release();egl=null;}}catch(Exception ignored){}if(sessionId!=null)ref().update("status",approved?"ended":"denied","updatedAt",FieldValue.serverTimestamp());if(Build.VERSION.SDK_INT>=24)stopForeground(STOP_FOREGROUND_REMOVE);else stopForeground(true);stopSelf();}
  @Override public void onDestroy(){if(!cleaning)cleanup();super.onDestroy();}@Override public IBinder onBind(Intent i){return null;}
  static class SdpObserverAdapter implements SdpObserver{public void onCreateSuccess(SessionDescription s){}public void onSetSuccess(){}public void onCreateFailure(String e){}public void onSetFailure(String e){}}
 }
