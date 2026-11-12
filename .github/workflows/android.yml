@@ -30,6 +30,10 @@ jobs:
         run: |
           npm install --prefix functions
           node --check functions/index.js
+      - name: Validate Firestore security rules with Emulator
+        run: |
+          npm install --prefix tests
+          tests/node_modules/.bin/firebase emulators:exec --only firestore --project demo-familyguard "npm --prefix tests test"
       - name: Build Parent and Child APKs
         run: gradle --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
