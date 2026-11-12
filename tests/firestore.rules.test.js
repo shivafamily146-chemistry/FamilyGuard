@@ -86,6 +86,28 @@ test('expired pairing code cannot be consumed or linked', async () => {
     pairedAt: Timestamp.fromMillis(Date.now())
   }));
 });
+test('Parent-owned child rules cannot be reassigned to another family', async () => {
+  const parent = env.authenticatedContext(parentUid).firestore();
+  const stranger = env.authenticatedContext(strangerUid).firestore();
+  await env.withSecurityRulesDisabled(async context => {
+    const db = context.firestore();
+    await setDoc(doc(db, 'appBlockRules/app1'), {
+      parentUid, childUid, packageName: 'com.example.app', active: true
+    });
+    await setDoc(doc(db, 'websiteBlockRules/web1'), {
+      parentUid, childUid, domain: 'example.com', active: true
+    });
+    await setDoc(doc(db, 'geofences/fence1'), {
+      parentUid, childUid, latitude: 17.4, longitude: 78.4, radiusMeters: 250, active: true
+    });
+  });
+  for (const path of ['appBlockRules/app1', 'websiteBlockRules/web1', 'geofences/fence1']) {
+    await assertFails(updateDoc(doc(parent, path), { childUid: strangerUid }));
+    await assertFails(updateDoc(doc(parent, path), { parentUid: strangerUid }));
+  }
+  await assertFails(updateDoc(doc(stranger, 'appBlockRules/app1'), { active: false }));
+});
+
 test('only the linked Parent can create a screen session request', async () => {
   const parent = env.authenticatedContext(parentUid).firestore();
   const stranger = env.authenticatedContext(strangerUid).firestore();
