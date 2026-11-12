@@ -87,7 +87,11 @@ service cloud.firestore {
      && request.resource.data.parentUid == request.auth.uid
      && request.resource.data.childUid is string
      && request.resource.data.status == 'requested'
-     && request.resource.data.keys().hasOnly(['parentUid','childUid','status','createdAt'])
+     && request.resource.data.offer is map
+     && request.resource.data.offer.type == 'offer'
+     && request.resource.data.offer.sdp is string
+     && request.resource.data.offer.sdp.size() <= 65536
+     && request.resource.data.keys().hasOnly(['parentUid','childUid','status','createdAt','offer'])
      && exists(/databases/$(database)/documents/familyLinks/$(request.resource.data.childUid))
      && get(/databases/$(database)/documents/familyLinks/$(request.resource.data.childUid)).data.parentUid == request.auth.uid;
    allow read: if signedIn()
@@ -108,9 +112,9 @@ service cloud.firestore {
       && request.resource.data.candidate is string
       && request.resource.data.candidate.size() <= 8192
       && request.resource.data.keys().hasOnly(['senderUid','candidate','createdAt'])
-      && get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.status == 'approved'
-      && (get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.parentUid == request.auth.uid
-          || get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.childUid == request.auth.uid);
+      && ((get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.parentUid == request.auth.uid && get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.status in ['requested','approved'])
+          || (get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.childUid == request.auth.uid && get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.status == 'approved'))
+      && (get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.parentUid == request.resource.data.senderUid || get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.childUid == request.resource.data.senderUid);
     allow read: if signedIn()
       && (get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.parentUid == request.auth.uid
           || get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.childUid == request.auth.uid);
