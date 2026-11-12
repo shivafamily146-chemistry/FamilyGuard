@@ -23,14 +23,13 @@ public class AppBlockingAccessibilityService extends AccessibilityService {
         String childUid = auth.getCurrentUser().getUid();
         rulesListener = db.collection("appBlockRules")
             .whereEqualTo("childUid", childUid)
-            .whereEqualTo("active", true)
             .addSnapshotListener((snap, error) -> {
                 if (error != null || snap == null) return;
                 synchronized (blockedPackages) {
                     blockedPackages.clear();
                     for (DocumentSnapshot d : snap) {
                         String pkg = d.getString("packageName");
-                        if (pkg != null && !pkg.isEmpty()) blockedPackages.add(pkg);
+                        if (Boolean.TRUE.equals(d.getBoolean("active")) && pkg != null && !pkg.isEmpty()) blockedPackages.add(pkg);
                     }
                 }
             });
