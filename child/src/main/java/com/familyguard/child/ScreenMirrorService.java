@@ -116,12 +116,12 @@ public class ScreenMirrorService extends Service {
             peer = factory.createPeerConnection(config, new PeerConnection.Observer() {
                 @Override public void onSignalingChange(PeerConnection.SignalingState s) {}
                 @Override public void onIceConnectionChange(PeerConnection.IceConnectionState s) {
-                    if (s == PeerConnection.IceConnectionState.FAILED || s == PeerConnection.IceConnectionState.DISCONNECTED)
+                    if (s == PeerConnection.IceConnectionState.FAILED)
                         stopWithMessage("Screen connection lost.");
                 }
                 @Override public void onStandardizedIceConnectionChange(PeerConnection.IceConnectionState s) {}
                 @Override public void onConnectionChange(PeerConnection.PeerConnectionState s) {
-                    if (s == PeerConnection.PeerConnectionState.FAILED || s == PeerConnection.PeerConnectionState.DISCONNECTED)
+                    if (s == PeerConnection.PeerConnectionState.FAILED)
                         stopWithMessage("Screen connection lost.");
                 }
                 @Override public void onIceConnectionReceivingChange(boolean b) {}
