@@ -59,3 +59,8 @@ GitHub Actions builds debug APKs for both Android modules. Download the `familyg
 https://github.com/shivafamily146-chemistry/FamilyGuard/actions
 
 Requirements: JDK 17 and Android SDK Platform 35.
+
+## Default profile avatars
+- Parent app uses `parent/src/main/res/drawable/parent_profile_avatar.xml`.
+- Child app uses `child/src/main/res/drawable/child_profile_avatar.xml`.
+- Both are bundled Android vector drawables and displayed in their respective app headers.
