@@ -23,6 +23,7 @@ public class ScreenMirrorService extends Service {
     private String sessionId, uid;
     private boolean approved = false;
     private final List<IceCandidate> pendingLocalCandidates = new ArrayList<>();
+    private final Set<String> seenRemoteCandidates = new HashSet<>();
 
     @Override public void onCreate() { super.onCreate(); createChannel(); }
 
@@ -85,11 +86,12 @@ public class ScreenMirrorService extends Service {
                 if (d.getBoolean("applied") != null && Boolean.TRUE.equals(d.getBoolean("applied"))) continue;
                 String sender = d.getString("senderUid");
                 if (uid.equals(sender)) continue;
-                String mid = d.getString("sdpMid"), sdp = d.getString("sdp");
-                Long line = d.getLong("sdpMLineIndex");
-                if (sdp != null && line != null) {
-                    peer.addIceCandidate(new IceCandidate(mid, line.intValue(), sdp));
-                    d.getReference().update("applied", true);
+                String encoded = d.getString("candidate");
+                if (encoded != null && seenRemoteCandidates.add(d.getId())) {
+                    try {
+                        org.json.JSONObject value = new org.json.JSONObject(encoded);
+                        peer.addIceCandidate(new IceCandidate(value.optString("sdpMid"), value.optInt("sdpMLineIndex"), value.getString("sdp")));
+                    } catch (Exception ignored) { }
                 }
             }
         });
@@ -130,8 +132,9 @@ public class ScreenMirrorService extends Service {
                 @Override public void onIceGatheringChange(PeerConnection.IceGatheringState s) {}
                 @Override public void onIceCandidate(IceCandidate c) {
                     Map<String,Object> data = new HashMap<>();
-                    data.put("senderUid", uid); data.put("sdpMid", c.sdpMid);
-                    data.put("sdpMLineIndex", c.sdpMLineIndex); data.put("sdp", c.sdp);
+                    data.put("senderUid", uid);
+                    try { data.put("candidate", new org.json.JSONObject().put("sdpMid", c.sdpMid).put("sdpMLineIndex", c.sdpMLineIndex).put("sdp", c.sdp).toString()); }
+                    catch (Exception ignored) { return; }
                     data.put("createdAt", FieldValue.serverTimestamp());
                     if (approved) FirebaseFirestore.getInstance().collection("screenSessions").document(sessionId)
                         .collection("candidates").add(data);
@@ -188,8 +191,9 @@ public class ScreenMirrorService extends Service {
         if (!approved || pendingLocalCandidates.isEmpty()) return;
         for (IceCandidate c : new ArrayList<>(pendingLocalCandidates)) {
             Map<String,Object> data = new HashMap<>();
-            data.put("senderUid", uid); data.put("sdpMid", c.sdpMid);
-            data.put("sdpMLineIndex", c.sdpMLineIndex); data.put("sdp", c.sdp);
+            data.put("senderUid", uid);
+            try { data.put("candidate", new org.json.JSONObject().put("sdpMid", c.sdpMid).put("sdpMLineIndex", c.sdpMLineIndex).put("sdp", c.sdp).toString()); }
+            catch (Exception ignored) { continue; }
             data.put("createdAt", FieldValue.serverTimestamp());
             FirebaseFirestore.getInstance().collection("screenSessions").document(sessionId).collection("candidates").add(data);
         }
