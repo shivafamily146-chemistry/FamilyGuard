@@ -26,6 +26,10 @@ FamilyGuard contains two Android apps: **FamilyGuard Parent** and **FamilyGuard 
 
 Sensitive capture remains visible and permission-based. Android system consent dialogs, foreground-service notifications, and privacy indicators cannot be hidden or bypassed.
 
+## Security rules tests
+
+The GitHub Actions workflow starts the Firestore Emulator and runs `tests/firestore.rules.test.js`. These tests cover linked Parent session creation, Child approval/denial, session ending, and participant-only ICE candidate writes. They validate Firestore authorization rules; they do not test media transport or prove that live mirroring works.
+
 ## Firebase setup
 
 1. Place the Firebase project's `google-services.json` in both Android app module directories (`parent/` and `child/`).
