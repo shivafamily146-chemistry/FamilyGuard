@@ -13,7 +13,7 @@ The Android modules are registered to the same Firebase project: `familyguard-83
 ## Pairing test
 
 1. Open Parent app and tap **Generate pairing code**.
-2. On Child app, enter the 8-character code within 10 minutes and tap **Pair with Parent**.
+2. On Child app, enter the 8-character code within 50 minutes and tap **Pair with Parent**.
 3. Child can send permission requests; Parent sees pending requests and can approve or deny.
 4. Android system permission prompts remain controlled by Android and the person using the Child phone.
 
