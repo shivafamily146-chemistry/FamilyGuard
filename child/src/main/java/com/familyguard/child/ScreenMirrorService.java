@@ -144,10 +144,10 @@ public class ScreenMirrorService extends Service {
             videoSource = factory.createVideoSource(true);
             capturer.initialize(textureHelper, getApplicationContext(), videoSource.getCapturerObserver());
             videoTrack = factory.createVideoTrack("familyguard-screen", videoSource);
-            peer.addTrack(videoTrack, Collections.singletonList("familyguard-screen-stream"));
             Map<String,Object> o = offer;
             peer.setRemoteDescription(new SimpleSdpObserver() {
                 @Override public void onSetSuccess() {
+                    peer.addTrack(videoTrack, Collections.singletonList("familyguard-screen-stream"));
                     peer.createAnswer(new SimpleSdpObserver() {
                         @Override public void onCreateSuccess(SessionDescription answer) {
                             peer.setLocalDescription(new SimpleSdpObserver() {
