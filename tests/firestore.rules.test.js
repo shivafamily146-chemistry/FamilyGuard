@@ -78,7 +78,7 @@ test('expired pairing code cannot be consumed or linked', async () => {
   await assertFails(updateDoc(doc(child, 'pairCodes/EXPIRE12'), { consumedBy: pairingChildUid }));
   await env.withSecurityRulesDisabled(async context => {
     await setDoc(doc(context.firestore(), 'pairCodes/EXPIRE12'), {
-      parentUid, consumedBy: childUid, expiresAt: Timestamp.fromMillis(Date.now() - 60000)
+      parentUid, consumedBy: pairingChildUid, expiresAt: Timestamp.fromMillis(Date.now() - 60000)
     });
   });
   await assertFails(setDoc(doc(child, 'familyLinks/' + pairingChildUid), {
