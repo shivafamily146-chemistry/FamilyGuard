@@ -9,20 +9,25 @@ service cloud.firestore {
    allow delete: if signedIn() && resource.data.parentUid == request.auth.uid;
   }
   match /familyLinks/{childUid}{
-   allow create: if signedIn() && childUid == request.auth.uid && request.resource.data.childUid == request.auth.uid
-    && exists(/databases/$(database)/documents/pairCodes/$(request.resource.data.pairCode))
-    && get(/databases/$(database)/documents/pairCodes/$(request.resource.data.pairCode)).data.parentUid == request.resource.data.parentUid
-    && get(/databases/$(database)/documents/pairCodes/$(request.resource.data.pairCode)).data.consumedBy == request.auth.uid;
+   allow create: if signedIn() && childUid == request.auth.uid && request.resource.data.childUid == request.auth.uid && exists(/databases/$(database)/documents/pairCodes/$(request.resource.data.pairCode)) && get(/databases/$(database)/documents/pairCodes/$(request.resource.data.pairCode)).data.parentUid == request.resource.data.parentUid && get(/databases/$(database)/documents/pairCodes/$(request.resource.data.pairCode)).data.consumedBy == request.auth.uid;
    allow read: if signedIn() && (resource.data.childUid == request.auth.uid || resource.data.parentUid == request.auth.uid);
    allow update,delete: if false;
   }
   match /approvalRequests/{id}{
-   allow create: if signedIn() && request.resource.data.childUid == request.auth.uid && request.resource.data.status == 'pending'
-    && exists(/databases/$(database)/documents/familyLinks/$(request.auth.uid))
-    && get(/databases/$(database)/documents/familyLinks/$(request.auth.uid)).data.parentUid == request.resource.data.parentUid;
+   allow create: if signedIn() && request.resource.data.childUid == request.auth.uid && request.resource.data.status == 'pending' && exists(/databases/$(database)/documents/familyLinks/$(request.auth.uid)) && get(/databases/$(database)/documents/familyLinks/$(request.auth.uid)).data.parentUid == request.resource.data.parentUid;
    allow read: if signedIn() && (resource.data.childUid == request.auth.uid || resource.data.parentUid == request.auth.uid);
    allow update: if signedIn() && resource.data.parentUid == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','resolvedAt']) && request.resource.data.status in ['approved','denied'];
    allow delete: if false;
+  }
+  match /locations/{childUid}{
+   allow create,update: if signedIn() && request.auth.uid == childUid && request.resource.data.childUid == childUid && exists(/databases/$(database)/documents/familyLinks/$(childUid)) && get(/databases/$(database)/documents/familyLinks/$(childUid)).data.parentUid == request.resource.data.parentUid;
+   allow read: if signedIn() && (request.auth.uid == childUid || (exists(/databases/$(database)/documents/familyLinks/$(childUid)) && get(/databases/$(database)/documents/familyLinks/$(childUid)).data.parentUid == request.auth.uid));
+   allow delete: if false;
+  }
+  match /locationHistory/{entryId}{
+   allow create: if signedIn() && request.resource.data.childUid == request.auth.uid && exists(/databases/$(database)/documents/familyLinks/$(request.auth.uid)) && get(/databases/$(database)/documents/familyLinks/$(request.auth.uid)).data.parentUid == request.resource.data.parentUid;
+   allow read: if signedIn() && (resource.data.childUid == request.auth.uid || resource.data.parentUid == request.auth.uid);
+   allow update,delete: if false;
   }
  }
 }
