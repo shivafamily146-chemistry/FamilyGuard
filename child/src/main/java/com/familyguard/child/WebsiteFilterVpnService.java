@@ -184,6 +184,7 @@ public class WebsiteFilterVpnService extends VpnService {
 
     private byte[] forwardDns(byte[] packet, int ipHeader, int start, int length) {
         try (DatagramSocket socket = new DatagramSocket()) {
+            if (!protect(socket)) return blockedResponse(packet, start, length);
             socket.setSoTimeout(2500);
             byte[] query = new byte[length];
             System.arraycopy(packet, start, query, 0, length);
