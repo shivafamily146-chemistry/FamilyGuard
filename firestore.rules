@@ -29,5 +29,15 @@ service cloud.firestore {
    allow read: if signedIn() && (resource.data.childUid == request.auth.uid || resource.data.parentUid == request.auth.uid);
    allow update,delete: if false;
   }
+  match /geofences/{fenceId}{
+   allow create: if signedIn() && request.resource.data.parentUid == request.auth.uid && request.resource.data.active == true && exists(/databases/$(database)/documents/familyLinks/$(request.resource.data.childUid)) && get(/databases/$(database)/documents/familyLinks/$(request.resource.data.childUid)).data.parentUid == request.auth.uid;
+   allow read: if signedIn() && (resource.data.parentUid == request.auth.uid || resource.data.childUid == request.auth.uid);
+   allow update,delete: if signedIn() && resource.data.parentUid == request.auth.uid;
+  }
+  match /geofenceEvents/{eventId}{
+   allow create: if signedIn() && request.resource.data.childUid == request.auth.uid && exists(/databases/$(database)/documents/familyLinks/$(request.auth.uid)) && get(/databases/$(database)/documents/familyLinks/$(request.auth.uid)).data.parentUid == request.resource.data.parentUid;
+   allow read: if signedIn() && (resource.data.childUid == request.auth.uid || resource.data.parentUid == request.auth.uid);
+   allow update,delete: if false;
+  }
  }
 }
