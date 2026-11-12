@@ -34,6 +34,12 @@ service cloud.firestore {
    allow read: if signedIn() && (resource.data.parentUid == request.auth.uid || resource.data.childUid == request.auth.uid);
    allow update,delete: if signedIn() && resource.data.parentUid == request.auth.uid;
   }
+  match /screenTimeLimits/{ruleId}{
+   allow create: if signedIn() && request.resource.data.parentUid == request.auth.uid && request.resource.data.active == true && request.resource.data.packageName is string && request.resource.data.dailyLimitMinutes is int && request.resource.data.dailyLimitMinutes >= 1 && request.resource.data.dailyLimitMinutes <= 1440 && exists(/databases/$(database)/documents/familyLinks/$(request.resource.data.childUid)) && get(/databases/$(database)/documents/familyLinks/$(request.resource.data.childUid)).data.parentUid == request.auth.uid;
+   allow read: if signedIn() && (resource.data.parentUid == request.auth.uid || resource.data.childUid == request.auth.uid);
+   allow update: if signedIn() && resource.data.parentUid == request.auth.uid && request.resource.data.parentUid == request.auth.uid && request.resource.data.childUid == resource.data.childUid && request.resource.data.packageName == resource.data.packageName && request.resource.data.dailyLimitMinutes is int && request.resource.data.dailyLimitMinutes >= 1 && request.resource.data.dailyLimitMinutes <= 1440;
+   allow delete: if signedIn() && resource.data.parentUid == request.auth.uid;
+  }
   match /usageReports/{childUid}{
    allow create,update: if signedIn() && request.auth.uid == childUid && request.resource.data.childUid == childUid && exists(/databases/$(database)/documents/familyLinks/$(childUid)) && get(/databases/$(database)/documents/familyLinks/$(childUid)).data.parentUid == request.resource.data.parentUid;
    allow read: if signedIn() && (request.auth.uid == childUid || (exists(/databases/$(database)/documents/familyLinks/$(childUid)) && get(/databases/$(database)/documents/familyLinks/$(childUid)).data.parentUid == request.auth.uid));
