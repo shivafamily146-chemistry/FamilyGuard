@@ -1,66 +1,12 @@
 package com.familyguard.child;
-
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.Service;
-import android.content.Context;
-import android.content.Intent;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.IBinder;
-
-public class LocationSessionService extends Service implements LocationListener {
-    private static final String CHANNEL = "familyguard_location";
-    private LocationManager manager;
-
-    @Override public void onCreate() {
-        super.onCreate();
-        createChannel();
-        Notification notification = new Notification.Builder(this, CHANNEL)
-            .setContentTitle("FamilyGuard location session")
-            .setContentText("Location session is active and visible.")
-            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
-            .setOngoing(true)
-            .build();
-        startForeground(7, notification);
-        manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        try {
-            if (manager != null) {
-                manager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 30000L, 10f, this);
-                manager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 30000L, 25f, this);
-            }
-        } catch (SecurityException ignored) {
-            stopSelf();
-        }
-    }
-
-    private void createChannel() {
-        if (Build.VERSION.SDK_INT >= 26) {
-            NotificationChannel channel = new NotificationChannel(CHANNEL, "Location session", NotificationManager.IMPORTANCE_LOW);
-            NotificationManager nm = getSystemService(NotificationManager.class);
-            if (nm != null) nm.createNotificationChannel(channel);
-        }
-    }
-
-    @Override public void onLocationChanged(Location location) {
-        getSharedPreferences("familyguard_child", MODE_PRIVATE).edit()
-            .putLong("last_location_time", location.getTime())
-            .putString("last_latitude", String.valueOf(location.getLatitude()))
-            .putString("last_longitude", String.valueOf(location.getLongitude()))
-            .apply();
-    }
-
-    @Override public int onStartCommand(Intent intent, int flags, int startId) { return START_STICKY; }
-    @Override public void onDestroy() {
-        if (manager != null) manager.removeUpdates(this);
-        super.onDestroy();
-    }
-    @Override public void onProviderEnabled(String provider) {}
-    @Override public void onProviderDisabled(String provider) {}
-    @Override public void onStatusChanged(String provider, int status, Bundle extras) {}
-    @Override public IBinder onBind(Intent intent) { return null; }
+import android.app.Notification;import android.app.NotificationChannel;import android.app.NotificationManager;import android.app.Service;import android.content.Context;import android.content.Intent;import android.location.Location;import android.location.LocationListener;import android.location.LocationManager;import android.os.Build;import android.os.Bundle;import android.os.IBinder;
+import com.google.firebase.auth.FirebaseAuth;import com.google.firebase.firestore.FirebaseFirestore;import com.google.firebase.firestore.FieldValue;import java.util.*;
+public class LocationSessionService extends Service implements LocationListener{
+ private static final String CHANNEL="familyguard_location";private LocationManager manager;
+ @Override public void onCreate(){super.onCreate();createChannel();Notification n=new Notification.Builder(this,CHANNEL).setContentTitle("FamilyGuard location sharing").setContentText("Location sharing is active and visible on this device.").setSmallIcon(android.R.drawable.ic_menu_mylocation).setOngoing(true).build();startForeground(7,n);manager=(LocationManager)getSystemService(Context.LOCATION_SERVICE);try{if(manager!=null){manager.requestLocationUpdates(LocationManager.GPS_PROVIDER,30000L,10f,this);manager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,30000L,25f,this);}}catch(SecurityException e){stopSelf();}}
+ private void createChannel(){if(Build.VERSION.SDK_INT>=26){NotificationChannel c=new NotificationChannel(CHANNEL,"Location sharing",NotificationManager.IMPORTANCE_LOW);NotificationManager nm=getSystemService(NotificationManager.class);if(nm!=null)nm.createNotificationChannel(c);}}
+ @Override public void onLocationChanged(Location l){String child=FirebaseAuth.getInstance().getUid();String parent=getSharedPreferences("familyguard_child",MODE_PRIVATE).getString("parent_uid",null);if(child==null||parent==null)return;Map<String,Object>d=new HashMap<>();d.put("childUid",child);d.put("parentUid",parent);d.put("latitude",l.getLatitude());d.put("longitude",l.getLongitude());d.put("accuracyMeters",l.getAccuracy());d.put("capturedAt",FieldValue.serverTimestamp());FirebaseFirestore db=FirebaseFirestore.getInstance();db.collection("locations").document(child).set(d);Map<String,Object>h=new HashMap<>(d);h.put("deviceTime",l.getTime());db.collection("locationHistory").add(h);getSharedPreferences("familyguard_child",MODE_PRIVATE).edit().putLong("last_location_time",l.getTime()).putString("last_latitude",String.valueOf(l.getLatitude())).putString("last_longitude",String.valueOf(l.getLongitude())).apply();}
+ @Override public int onStartCommand(Intent i,int f,int id){return START_STICKY;}
+ @Override public void onDestroy(){if(manager!=null)manager.removeUpdates(this);super.onDestroy();}
+ @Override public void onProviderEnabled(String p){}@Override public void onProviderDisabled(String p){}@Override public void onStatusChanged(String p,int s,Bundle b){}@Override public IBinder onBind(Intent i){return null;}
 }
