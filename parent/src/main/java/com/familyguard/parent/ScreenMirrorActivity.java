@@ -43,7 +43,8 @@ public class ScreenMirrorActivity extends Activity {
     }
 
     private void requestSession() {
-        if (peer != null || sessionRef != null) return;
+        if (peer != null) return;
+        sessionRef = null; sessionId = null; sessionCreated = false; remoteAnswerSet = false; pendingCandidates.clear(); seenCandidates.clear();
         try {
             status.setText("Preparing secure WebRTC connection…");
             startButton.setEnabled(false); stopButton.setEnabled(true);
