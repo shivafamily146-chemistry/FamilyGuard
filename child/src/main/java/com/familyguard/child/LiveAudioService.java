@@ -31,7 +31,7 @@ public class LiveAudioService extends Service {
         b.setSmallIcon(android.R.drawable.ic_btn_speak_now).setContentTitle("FamilyGuard live microphone")
          .setContentText("Microphone is live to your approved Parent. Tap to stop it in Child app.").setOngoing(true)
          .setContentIntent(PendingIntent.getActivity(this,4110,open,pf));
-        if(Build.VERSION.SDK_INT>=29)startForeground(4110,b.build(),android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE);else startForeground(4110,b.build());
+        if(Build.VERSION.SDK_INT>=30)startForeground(4110,b.build(),android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE);else startForeground(4110,b.build());
         uid=FirebaseAuth.getInstance().getUid();if(uid==null){cleanup();return START_NOT_STICKY;}
         listen();return START_NOT_STICKY;
     }
