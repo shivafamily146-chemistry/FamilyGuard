@@ -1,0 +1,3 @@
+<resources>
+    <string name="familyguard_accessibility_description">FamilyGuard uses app-change events only to apply app restrictions chosen by the paired Parent. It does not read screen text or capture content.</string>
+</resources>
