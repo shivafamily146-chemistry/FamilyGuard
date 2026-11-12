@@ -21,7 +21,7 @@ public class AppBlockedActivity extends Activity {
         title.setTextSize(24);
         title.setGravity(Gravity.CENTER);
         TextView detail = new TextView(this);
-        detail.setText((pkg == null ? "This app" : pkg) + "\\nA Parent has set an app restriction.");
+        detail.setText((pkg == null ? "This app" : pkg) + "\nA Parent has set an app restriction.");
         detail.setTextSize(16);
         detail.setGravity(Gravity.CENTER);
         Button home = new Button(this);
