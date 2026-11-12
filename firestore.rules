@@ -83,8 +83,7 @@ service cloud.firestore {
   match /parentProfiles/{parentUid}{
    allow create,update: if signedIn() && request.auth.uid == parentUid
      && request.resource.data.keys().hasOnly(['fcmToken','updatedAt'])
-     && request.resource.data.fcmToken is string
-     && request.resource.data.fcmToken.size() > 20;
+     && (!('fcmToken' in request.resource.data) || (request.resource.data.fcmToken is string && request.resource.data.fcmToken.size() > 20));
    allow read: if signedIn() && request.auth.uid == parentUid;
    allow delete: if false;
   }
