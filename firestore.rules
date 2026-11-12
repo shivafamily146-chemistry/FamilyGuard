@@ -82,6 +82,7 @@ service cloud.firestore {
   }
   // WebRTC session signalling foundation. No media is captured or streamed by these rules.
   // Parent requests a session; Child must explicitly approve before any capture may begin.
+  // WebRTC signalling only. A Child must approve before capture/streaming starts.
   match /screenSessions/{sessionId}{
    allow create: if signedIn()
      && request.resource.data.parentUid == request.auth.uid
@@ -100,10 +101,22 @@ service cloud.firestore {
      && request.resource.data.parentUid == resource.data.parentUid
      && request.resource.data.childUid == resource.data.childUid
      && request.resource.data.createdAt == resource.data.createdAt
-     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt'])
+     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','answer','updatedAt'])
      && (
-       (resource.data.parentUid == request.auth.uid && request.resource.data.status in ['ended','cancelled'])
-       || (resource.data.childUid == request.auth.uid && resource.data.status in ['approved','denied','ended'] && resource.data.status == 'requested' || resource.data.childUid == request.auth.uid && request.resource.data.status == 'ended' && resource.data.status == 'approved')
+       (resource.data.parentUid == request.auth.uid
+         && request.resource.data.status in ['ended','cancelled']
+         && !('answer' in request.resource.data))
+       || (resource.data.childUid == request.auth.uid
+         && resource.data.status == 'requested'
+         && request.resource.data.status in ['approved','denied']
+         && request.resource.data.answer is map
+         && request.resource.data.answer.type == 'answer'
+         && request.resource.data.answer.sdp is string
+         && request.resource.data.answer.sdp.size() <= 65536)
+       || (resource.data.childUid == request.auth.uid
+         && resource.data.status == 'approved'
+         && request.resource.data.status == 'ended'
+         && !('answer' in request.resource.data))
      );
    allow delete: if false;
    match /candidates/{candidateId}{
@@ -112,9 +125,10 @@ service cloud.firestore {
       && request.resource.data.candidate is string
       && request.resource.data.candidate.size() <= 8192
       && request.resource.data.keys().hasOnly(['senderUid','candidate','createdAt'])
-      && ((get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.parentUid == request.auth.uid && get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.status in ['requested','approved'])
-          || (get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.childUid == request.auth.uid && get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.status == 'approved'))
-      && (get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.parentUid == request.resource.data.senderUid || get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.childUid == request.resource.data.senderUid);
+      && ((get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.parentUid == request.auth.uid
+            && get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.status in ['requested','approved'])
+          || (get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.childUid == request.auth.uid
+            && get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.status == 'approved'));
     allow read: if signedIn()
       && (get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.parentUid == request.auth.uid
           || get(/databases/$(database)/documents/screenSessions/$(sessionId)).data.childUid == request.auth.uid);
