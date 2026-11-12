@@ -68,16 +68,6 @@ public class ScreenMirrorService extends Service {
                 Object offerObj = snapshot.get("offer");
                 if (offerObj instanceof Map) startPeer((Map<String,Object>)offerObj, projectionData, resultCode);
             }
-            Object answerObj = snapshot.get("answer");
-            if (peer != null && "approved".equals(status) && answerObj instanceof Map && !remoteAnswerSet) {
-                Map<String,Object> answer = (Map<String,Object>)answerObj;
-                peer.setRemoteDescription(new SimpleSdpObserver(), new SessionDescription(
-                    SessionDescription.Type.fromCanonicalForm(String.valueOf(answer.get("type"))),
-                    String.valueOf(answer.get("sdp"))));
-                remoteAnswerSet = true;
-                approved = true;
-                flushLocalCandidates();
-            }
         });
         candidateListener = ref.collection("candidates").addSnapshotListener((snap, error) -> {
             if (error != null || snap == null || peer == null) return;
@@ -102,7 +92,6 @@ public class ScreenMirrorService extends Service {
 
     private Intent pendingProjectionData;
     private int pendingResultCode;
-    private boolean remoteAnswerSet = false;
 
     private void startPeer(Map<String,Object> offer, Intent projectionData, int resultCode) {
         try {
