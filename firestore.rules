@@ -104,8 +104,7 @@ service cloud.firestore {
      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','answer','updatedAt'])
      && (
        (resource.data.parentUid == request.auth.uid
-         && request.resource.data.status in ['ended','cancelled']
-         && !('answer' in request.resource.data))
+         && request.resource.data.status in ['ended','cancelled'])
        || (resource.data.childUid == request.auth.uid
          && resource.data.status == 'requested'
          && ((request.resource.data.status == 'approved'
@@ -116,8 +115,7 @@ service cloud.firestore {
              || (request.resource.data.status == 'denied' && !('answer' in request.resource.data)))
        || (resource.data.childUid == request.auth.uid
          && resource.data.status == 'approved'
-         && request.resource.data.status == 'ended'
-         && !('answer' in request.resource.data))
+         && request.resource.data.status == 'ended')
      );
    allow delete: if false;
    match /candidates/{candidateId}{
