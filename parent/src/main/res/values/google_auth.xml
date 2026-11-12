@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Replace with the Firebase project's OAuth 2.0 Web client ID (not Android client ID). -->
+    <string name="google_web_client_id">REPLACE_WITH_WEB_CLIENT_ID</string>
+</resources>
