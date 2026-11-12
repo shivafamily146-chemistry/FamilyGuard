@@ -32,7 +32,8 @@ service cloud.firestore {
   match /appBlockRules/{ruleId}{
    allow create: if signedIn() && request.resource.data.parentUid == request.auth.uid && request.resource.data.active == true && request.resource.data.packageName is string && request.resource.data.packageName.size() > 2 && exists(/databases/$(database)/documents/familyLinks/$(request.resource.data.childUid)) && get(/databases/$(database)/documents/familyLinks/$(request.resource.data.childUid)).data.parentUid == request.auth.uid;
    allow read: if signedIn() && (resource.data.parentUid == request.auth.uid || resource.data.childUid == request.auth.uid);
-   allow update,delete: if signedIn() && resource.data.parentUid == request.auth.uid;
+   allow update: if signedIn() && resource.data.parentUid == request.auth.uid && request.resource.data.parentUid == resource.data.parentUid && request.resource.data.childUid == resource.data.childUid;
+   allow delete: if signedIn() && resource.data.parentUid == request.auth.uid;
   }
   match /screenTimeLimits/{ruleId}{
    allow create: if signedIn() && request.resource.data.parentUid == request.auth.uid && request.resource.data.active == true && request.resource.data.packageName is string && request.resource.data.dailyLimitMinutes is int && request.resource.data.dailyLimitMinutes >= 1 && request.resource.data.dailyLimitMinutes <= 1440 && exists(/databases/$(database)/documents/familyLinks/$(request.resource.data.childUid)) && get(/databases/$(database)/documents/familyLinks/$(request.resource.data.childUid)).data.parentUid == request.auth.uid;
@@ -43,7 +44,8 @@ service cloud.firestore {
   match /websiteBlockRules/{ruleId}{
    allow create: if signedIn() && request.resource.data.parentUid == request.auth.uid && request.resource.data.active == true && request.resource.data.domain is string && request.resource.data.domain.size() >= 4 && exists(/databases/$(database)/documents/familyLinks/$(request.resource.data.childUid)) && get(/databases/$(database)/documents/familyLinks/$(request.resource.data.childUid)).data.parentUid == request.auth.uid;
    allow read: if signedIn() && (resource.data.parentUid == request.auth.uid || resource.data.childUid == request.auth.uid);
-   allow update,delete: if signedIn() && resource.data.parentUid == request.auth.uid;
+   allow update: if signedIn() && resource.data.parentUid == request.auth.uid && request.resource.data.parentUid == resource.data.parentUid && request.resource.data.childUid == resource.data.childUid;
+   allow delete: if signedIn() && resource.data.parentUid == request.auth.uid;
   }
   match /browserDomainEvents/{eventId}{
    allow create: if signedIn() && request.resource.data.childUid == request.auth.uid && request.resource.data.domain is string && request.resource.data.blocked is bool && exists(/databases/$(database)/documents/familyLinks/$(request.auth.uid)) && get(/databases/$(database)/documents/familyLinks/$(request.auth.uid)).data.parentUid == request.resource.data.parentUid;
@@ -73,7 +75,8 @@ service cloud.firestore {
   match /geofences/{fenceId}{
    allow create: if signedIn() && request.resource.data.parentUid == request.auth.uid && request.resource.data.active == true && request.resource.data.latitude is number && request.resource.data.latitude >= -90 && request.resource.data.latitude <= 90 && request.resource.data.longitude is number && request.resource.data.longitude >= -180 && request.resource.data.longitude <= 180 && request.resource.data.radiusMeters is number && request.resource.data.radiusMeters >= 25 && request.resource.data.radiusMeters <= 100000 && exists(/databases/$(database)/documents/familyLinks/$(request.resource.data.childUid)) && get(/databases/$(database)/documents/familyLinks/$(request.resource.data.childUid)).data.parentUid == request.auth.uid;
    allow read: if signedIn() && (resource.data.parentUid == request.auth.uid || resource.data.childUid == request.auth.uid);
-   allow update,delete: if signedIn() && resource.data.parentUid == request.auth.uid;
+   allow update: if signedIn() && resource.data.parentUid == request.auth.uid && request.resource.data.parentUid == resource.data.parentUid && request.resource.data.childUid == resource.data.childUid;
+   allow delete: if signedIn() && resource.data.parentUid == request.auth.uid;
   }
   match /geofenceEvents/{eventId}{
    allow create: if signedIn() && request.resource.data.childUid == request.auth.uid && exists(/databases/$(database)/documents/familyLinks/$(request.auth.uid)) && get(/databases/$(database)/documents/familyLinks/$(request.auth.uid)).data.parentUid == request.resource.data.parentUid;
