@@ -24,6 +24,8 @@ public class ScreenMirrorService extends Service {
     private boolean approved = false;
     private final List<IceCandidate> pendingLocalCandidates = new ArrayList<>();
     private final Set<String> seenRemoteCandidates = new HashSet<>();
+    private final List<IceCandidate> pendingRemoteCandidates = new ArrayList<>();
+    private boolean remoteOfferSet = false;
 
     @Override public void onCreate() { super.onCreate(); createChannel(); }
 
@@ -85,7 +87,8 @@ public class ScreenMirrorService extends Service {
                 if (encoded != null && seenRemoteCandidates.add(d.getId())) {
                     try {
                         org.json.JSONObject value = new org.json.JSONObject(encoded);
-                        peer.addIceCandidate(new IceCandidate(value.optString("sdpMid"), value.optInt("sdpMLineIndex"), value.getString("sdp")));
+                        IceCandidate candidate = new IceCandidate(value.optString("sdpMid"), value.optInt("sdpMLineIndex"), value.getString("sdp"));
+                        if (remoteOfferSet) peer.addIceCandidate(candidate); else pendingRemoteCandidates.add(candidate);
                     } catch (Exception ignored) { }
                 }
             }
@@ -152,6 +155,9 @@ public class ScreenMirrorService extends Service {
             Map<String,Object> o = offer;
             peer.setRemoteDescription(new SimpleSdpObserver() {
                 @Override public void onSetSuccess() {
+                    remoteOfferSet = true;
+                    for (IceCandidate candidate : new ArrayList<>(pendingRemoteCandidates)) peer.addIceCandidate(candidate);
+                    pendingRemoteCandidates.clear();
                     peer.addTrack(videoTrack, Collections.singletonList("familyguard-screen-stream"));
                     peer.createAnswer(new SimpleSdpObserver() {
                         @Override public void onCreateSuccess(SessionDescription answer) {
