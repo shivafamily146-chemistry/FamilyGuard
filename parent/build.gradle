@@ -1,2 +1,2 @@
-plugins { id 'com.android.application' }
+plugins { id 'com.android.application'; id 'com.google.gms.google-services' }
 android { namespace 'com.familyguard.parent'; compileSdk 35; defaultConfig { applicationId 'com.familyguard.parent'; minSdk 23; targetSdk 35; versionCode 1; versionName '0.1.0' } }
