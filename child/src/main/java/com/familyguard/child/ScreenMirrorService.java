@@ -77,10 +77,9 @@ public class ScreenMirrorService extends Service {
             }
         });
         candidateListener = ref.collection("candidates").addSnapshotListener((snap, error) -> {
-            if (error != null || snap == null || peer == null) return;
+            if (error != null || snap == null) return;
             for (DocumentSnapshot d : snap.getDocuments()) {
                 if (d.getId().startsWith("child_")) continue;
-                if (d.getBoolean("applied") != null && Boolean.TRUE.equals(d.getBoolean("applied"))) continue;
                 String sender = d.getString("senderUid");
                 if (uid.equals(sender)) continue;
                 String encoded = d.getString("candidate");
@@ -88,7 +87,7 @@ public class ScreenMirrorService extends Service {
                     try {
                         org.json.JSONObject value = new org.json.JSONObject(encoded);
                         IceCandidate candidate = new IceCandidate(value.optString("sdpMid"), value.optInt("sdpMLineIndex"), value.getString("sdp"));
-                        if (remoteOfferSet) peer.addIceCandidate(candidate); else pendingRemoteCandidates.add(candidate);
+                        if (peer != null && remoteOfferSet) peer.addIceCandidate(candidate); else pendingRemoteCandidates.add(candidate);
                     } catch (Exception ignored) { }
                 }
             }
