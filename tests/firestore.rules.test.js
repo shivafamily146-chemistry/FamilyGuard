@@ -114,3 +114,32 @@ test('ICE candidates are limited to the linked session participants and session 
   }));
   await assertSucceeds(setDoc(doc(child, 'screenSessions/session1/candidates/c1'), candidateData(childUid)));
 });
+
+test('only the linked Parent can create a live audio request', async () => {
+  const parent = env.authenticatedContext(parentUid).firestore();
+  const stranger = env.authenticatedContext(strangerUid).firestore();
+  const data = { ...sessionData(), parentUid, childUid };
+  await assertSucceeds(setDoc(doc(parent, 'audioSessions/audio1'), data));
+  await assertFails(setDoc(doc(stranger, 'audioSessions/audio2'), { ...data, parentUid: strangerUid }));
+});
+
+test('Child must approve live audio and only session participants may signal ICE', async () => {
+  const parent = env.authenticatedContext(parentUid).firestore();
+  const child = env.authenticatedContext(childUid).firestore();
+  const stranger = env.authenticatedContext(strangerUid).firestore();
+  const ref = doc(parent, 'audioSessions/audio1');
+  await assertSucceeds(setDoc(ref, sessionData()));
+  await assertSucceeds(getDoc(doc(child, 'audioSessions/audio1')));
+  await assertFails(updateDoc(ref, {
+    status: 'approved',
+    answer: { type: 'answer', sdp: 'v=0\\\\r\\\\n' },
+    updatedAt: Timestamp.fromMillis(1700000001000)
+  }));
+  await assertSucceeds(updateDoc(doc(child, 'audioSessions/audio1'), {
+    status: 'approved',
+    answer: { type: 'answer', sdp: 'v=0\\\\r\\\\n' },
+    updatedAt: Timestamp.fromMillis(1700000001000)
+  }));
+  await assertSucceeds(setDoc(doc(child, 'audioSessions/audio1/candidates/c1'), candidateData(childUid)));
+  await assertFails(setDoc(doc(stranger, 'audioSessions/audio1/candidates/x'), candidateData(strangerUid)));
+});
