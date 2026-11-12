@@ -34,3 +34,32 @@ exports.notifyParentOnGeofence = onDocumentCreated("geofenceEvents/{eventId}", a
     throw error;
   }
 });
+
+exports.notifyParentOnPermissionRequest = onDocumentCreated("approvalRequests/{requestId}", async (event) => {
+  const data = event.data && event.data.data();
+  if (!data || data.status !== "pending" || !data.parentUid) return;
+  const profile = await getFirestore().collection("parentProfiles").doc(data.parentUid).get();
+  const token = profile.exists && profile.get("fcmToken");
+  if (!token) return;
+  const permission = typeof data.permission === "string" ? data.permission : "a device permission";
+  const child = typeof data.childLabel === "string" ? data.childLabel : "Child device";
+  try {
+    await getMessaging().send({
+      token,
+      data: {
+        title: "FamilyGuard permission request",
+        body: child + " requests " + permission + " permission",
+        requestId: event.params.requestId
+      },
+      android: { priority: "high" }
+    });
+  } catch (error) {
+    const code = error && error.code;
+    if (code === "messaging/registration-token-not-registered" ||
+        code === "messaging/invalid-registration-token") {
+      await profile.ref.update({ fcmToken: "" });
+      return;
+    }
+    throw error;
+  }
+});
