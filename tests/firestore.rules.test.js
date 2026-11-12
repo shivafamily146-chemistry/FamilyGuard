@@ -9,6 +9,7 @@ let env;
 const parentUid = 'parent123';
 const childUid = 'child123';
 const strangerUid = 'stranger123';
+const pairingChildUid = 'pairchild123';
 const createdAt = Timestamp.fromMillis(1700000000000);
 
 function sessionData() {
@@ -58,13 +59,13 @@ test('valid pairing code can be consumed once by the Child', async () => {
       parentUid, consumedBy: '', expiresAt: Timestamp.fromMillis(now + 60000)
     });
   });
-  const child = env.authenticatedContext(childUid).firestore();
-  await assertSucceeds(updateDoc(doc(child, 'pairCodes/VALID123'), { consumedBy: childUid }));
-  await assertSucceeds(setDoc(doc(child, 'familyLinks/' + childUid), {
-    parentUid, childUid, pairCode: 'VALID123', childLabel: 'Test Child',
+  const child = env.authenticatedContext(pairingChildUid).firestore();
+  await assertSucceeds(updateDoc(doc(child, 'pairCodes/VALID123'), { consumedBy: pairingChildUid }));
+  await assertSucceeds(setDoc(doc(child, 'familyLinks/' + pairingChildUid), {
+    parentUid, childUid: pairingChildUid, pairCode: 'VALID123', childLabel: 'Test Child',
     pairedAt: Timestamp.fromMillis(now)
   }));
-  await assertFails(updateDoc(doc(child, 'pairCodes/VALID123'), { consumedBy: childUid }));
+  await assertFails(updateDoc(doc(child, 'pairCodes/VALID123'), { consumedBy: pairingChildUid }));
 });
 
 test('expired pairing code cannot be consumed or linked', async () => {
@@ -73,15 +74,15 @@ test('expired pairing code cannot be consumed or linked', async () => {
       parentUid, consumedBy: '', expiresAt: Timestamp.fromMillis(Date.now() - 60000)
     });
   });
-  const child = env.authenticatedContext(childUid).firestore();
-  await assertFails(updateDoc(doc(child, 'pairCodes/EXPIRE12'), { consumedBy: childUid }));
+  const child = env.authenticatedContext(pairingChildUid).firestore();
+  await assertFails(updateDoc(doc(child, 'pairCodes/EXPIRE12'), { consumedBy: pairingChildUid }));
   await env.withSecurityRulesDisabled(async context => {
     await setDoc(doc(context.firestore(), 'pairCodes/EXPIRE12'), {
       parentUid, consumedBy: childUid, expiresAt: Timestamp.fromMillis(Date.now() - 60000)
     });
   });
-  await assertFails(setDoc(doc(child, 'familyLinks/' + childUid), {
-    parentUid, childUid, pairCode: 'EXPIRE12', childLabel: 'Test Child',
+  await assertFails(setDoc(doc(child, 'familyLinks/' + pairingChildUid), {
+    parentUid, childUid: pairingChildUid, pairCode: 'EXPIRE12', childLabel: 'Test Child',
     pairedAt: Timestamp.fromMillis(Date.now())
   }));
 });
