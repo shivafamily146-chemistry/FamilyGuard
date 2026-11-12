@@ -172,7 +172,7 @@ public class ScreenMirrorActivity extends Activity {
         try { if (egl != null) { egl.release(); egl = null; } } catch (Exception ignored) {}
         if (!ending && sessionRef != null) sessionRef.update("status", "cancelled", "updatedAt", FieldValue.serverTimestamp());
     }
-    @Override public void onDestroy() { ending = true; cleanup(); super.onDestroy(); }
+    @Override public void onDestroy() { if (!ending && sessionRef != null) sessionRef.update("status", "cancelled", "updatedAt", FieldValue.serverTimestamp()); ending = true; cleanup(); super.onDestroy(); }
 
     static class SimpleSdpObserver implements SdpObserver {
         @Override public void onCreateSuccess(SessionDescription s) {}
